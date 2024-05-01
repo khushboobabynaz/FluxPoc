@@ -1,0 +1,72 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: cosmic-debug-agent
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: cosmic-debug-win
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: cosmic-debug-linux
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: cosmic-debug-cpr
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: cosmic-debug-podsniff
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: cosmic-debug-winlog
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: cosmic-debug-deployscript
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: cosmic-debug-networkmetric
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: cosmic-debug-wpr
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: cosmic-debug-gadget
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cosmic-debug-agent-dev
+  namespace: cosmic-debug-agent
+  labels:
+    app: agent
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: agent
+  template:
+    metadata:
+      labels:
+        app: agent
+    spec:
+      containers:
+      - name: agent-container
+        image: nginx:latest
+        ports:
+        - containerPort: 80
