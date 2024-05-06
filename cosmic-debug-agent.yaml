@@ -1,0 +1,1293 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: cosmic-debug-agent
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: cosmic-debug-agent
+  labels:
+    version: ${BUILD_VERSION}
+  namespace: cosmic-debug-agent
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: ig-serviceaccount
+  labels:
+    version: ${BUILD_VERSION}
+  namespace: cosmic-debug-gadget
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: cprs.diagnostics.office.com
+  labels:
+    version: ${BUILD_VERSION}
+spec:
+  group: diagnostics.office.com
+  names:
+    kind: Cpr
+    listKind: CprList
+    plural: cprs
+    singular: cpr
+  scope: Namespaced
+  versions:
+  - name: v1beta1
+    additionalPrinterColumns:
+    - jsonPath: .spec.pod
+      name: TARGET-POD
+      type: string
+    - jsonPath: .status.phase
+      name: STATUS
+      type: string
+    - jsonPath: .metadata.creationTimestamp
+      name: AGE
+      type: date
+    schema:
+      openAPIV3Schema:
+        description: Cpr is the Schema for the cprs API
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: //git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: //git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: CprSpec defines the desired state of Cpr
+            properties:
+              parameters:
+                type: object
+                properties:
+                  namedConfigs:
+                    description: 'NamedConfigs are a list of pre-defined configurations
+                      Sample: `[]string {"Default", "OnDemand"}`'
+                    items:
+                      type: string
+                    type: array
+                  overridesJsonString:
+                    description: 'OverridesJsonString is the powershell hashtable format
+                      ConfigurationOverride argument for Invoke-CprAnalysis.ps1, Sample:
+                      `{ "CollectMemoryMode.ProcessId": 1234, "AnalyzeMemoryMode.Enabled":
+                      true }`'
+                    type: string
+              pod:
+                description: Pod is the target pod
+                type: string
+              user:
+                type: string
+            type: object
+            x-kubernetes-preserve-unknown-fields: true
+          status:
+            description: DebugOperationStatus defines the observed state of DebugOperation
+            properties:
+              errorMessage:
+                description: Error message of the operation
+                type: string
+              lastUpdateTime:
+                description: LastUpdateTime defines date and time when status changed
+                format: date-time
+                type: string
+              phase:
+                description: high-level indicator of this operation
+                type: string
+              result:
+                description: Result link of CPR Analysis
+                type: string
+              workerJob:
+                description: WorkerJob is the Job wrapping the HPC pod executing the
+                  operation
+                type: string
+              workerPod:
+                description: WorkerPod is the HPC pod executing the operation
+                type: string
+              workerLabel:
+                additionalProperties:
+                  type: string
+                description: WorkerLabel is the label to select HPC pod
+                type: object
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: winlogs.diagnostics.office.com
+  labels:
+    version: ${BUILD_VERSION}
+spec:
+  group: diagnostics.office.com
+  names:
+    kind: Winlog
+    listKind: WinlogList
+    plural: winlogs
+    singular: winlog
+  scope: Namespaced
+  versions:
+  - name: v1beta1
+    additionalPrinterColumns:
+    - jsonPath: .spec.pod
+      name: TARGET-POD
+      type: string
+    - jsonPath: .spec.node
+      name: TARGET-NODE
+      type: string
+    - jsonPath: .status.phase
+      name: STATUS
+      type: string
+    - jsonPath: .metadata.creationTimestamp
+      name: AGE
+      type: date
+    schema:
+      openAPIV3Schema:
+        description: the Schema for the winlogs API
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: //git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: //git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: Spec defines the input arguments for debug operation
+            properties:
+              parameters:
+                type: object
+                properties:
+                  scriptLogType:
+                    description: Log type to be collected.
+                    type: string
+              pod:
+                description: Pod is the target pod
+                type: string
+              node:
+                description: Node is the target node
+                type: string
+              user:
+                type: string
+            type: object
+            x-kubernetes-preserve-unknown-fields: true
+          status:
+            description: DebugOperationStatus defines the observed state of DebugOperation
+            properties:
+              errorMessage:
+                description: Error message of the operation
+                type: string
+              lastUpdateTime:
+                description: LastUpdateTime defines date and time when status changed
+                format: date-time
+                type: string
+              phase:
+                description: high-level indicator of this operation
+                type: string
+              result:
+                description: Result link of winlog
+                type: string
+              workerJob:
+                description: WorkerJob is the Job wrapping the HPC pod executing the
+                  operation
+                type: string
+              workerPod:
+                description: WorkerPod is the HPC pod executing the operation
+                type: string
+              workerLabel:
+                additionalProperties:
+                  type: string
+                description: WorkerLabel is the label to select HPC pod
+                type: object
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: podsniffs.diagnostics.office.com
+  labels:
+    version: ${BUILD_VERSION}
+spec:
+  group: diagnostics.office.com
+  names:
+    kind: Podsniff
+    listKind: PodsniffList
+    plural: podsniffs
+    singular: podsniff
+  scope: Namespaced
+  versions:
+  - name: v1beta1
+    additionalPrinterColumns:
+    - jsonPath: .spec.pod
+      name: TARGET-POD
+      type: string
+    - jsonPath: .status.phase
+      name: STATUS
+      type: string
+    - jsonPath: .metadata.creationTimestamp
+      name: AGE
+      type: date
+    schema:
+      openAPIV3Schema:
+        description: Podsniff is the Schema for the podsniffs API
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: //git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: //git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            properties:
+              pod:
+                description: Pod is the target pod
+                type: string
+              durationInSeconds:
+                description: Operation duration in seconds
+                type: integer
+              user:
+                type: string
+            type: object
+            x-kubernetes-preserve-unknown-fields: true
+          status:
+            description: DebugOperationStatus defines the observed state of DebugOperation
+            properties:
+              errorMessage:
+                description: Error message of the operation
+                type: string
+              lastUpdateTime:
+                description: LastUpdateTime defines date and time when status changed
+                format: date-time
+                type: string
+              phase:
+                description: high-level indicator of this operation
+                type: string
+              result:
+                description: One-liner result of the operation
+                type: string
+              workerJob:
+                description: WorkerJob is the Job wrapping the HPC pod executing the
+                  operation
+                type: string
+              workerPod:
+                description: WorkerPod is the HPC pod executing the operation
+                type: string
+              workerLabel:
+                additionalProperties:
+                  type: string
+                description: WorkerLabel is the label to select HPC pod
+                type: object
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: deployscripts.diagnostics.office.com
+spec:
+  group: diagnostics.office.com
+  names:
+    kind: Deployscript
+    listKind: DeployscriptList
+    plural: deployscripts
+    singular: deployscript
+  scope: Namespaced
+  versions:
+  - name: v1beta1
+    additionalPrinterColumns:
+    - jsonPath: .spec.pod
+      name: TARGET-POD
+      type: string
+    - jsonPath: .spec.node
+      name: TARGET-NODE
+      type: string
+    - jsonPath: .status.phase
+      name: STATUS
+      type: string
+    - jsonPath: .metadata.creationTimestamp
+      name: AGE
+      type: date
+    schema:
+      openAPIV3Schema:
+        description: the Schema for the deployscripts API
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: //git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: //git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: Spec defines the input arguments for debug operation
+            properties:
+              parameters:
+                type: object
+                properties:
+                  scriptName:
+                    description: Target script to be run on node
+                    type: string
+                  scriptParameters:
+                    description: Parameters to be passed to the script
+                    type: string
+              pod:
+                description: Pod is the target pod
+                type: string
+              node:
+                description: Node is the target node
+                type: string
+              user:
+                type: string
+            type: object
+            x-kubernetes-preserve-unknown-fields: true
+          status:
+            description: DebugOperationStatus defines the observed state of DebugOperation
+            properties:
+              errorMessage:
+                description: Error message of the operation
+                type: string
+              lastUpdateTime:
+                description: LastUpdateTime defines date and time when status changed
+                format: date-time
+                type: string
+              phase:
+                description: high-level indicator of this operation
+                type: string
+              result:
+                description: Result link of deployscript
+                type: string
+              workerJob:
+                description: WorkerJob is the Job wrapping the HPC pod executing the
+                  operation
+                type: string
+              workerPod:
+                description: WorkerPod is the HPC pod executing the operation
+                type: string
+              workerLabel:
+                additionalProperties:
+                  type: string
+                description: WorkerLabel is the label to select HPC pod
+                type: object
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: networkmetrics.diagnostics.office.com
+spec:
+  group: diagnostics.office.com
+  names:
+    kind: NetworkMetric
+    listKind: NetworkMetricList
+    plural: networkmetrics
+    singular: networkmetric
+  scope: Namespaced
+  versions:
+  - name: v1beta1
+    additionalPrinterColumns:
+    - jsonPath: .spec.pod
+      name: TARGET-POD
+      type: string
+    - jsonPath: .spec.node
+      name: TARGET-NODE
+      type: string
+    - jsonPath: .status.phase
+      name: STATUS
+      type: string
+    - jsonPath: .metadata.creationTimestamp
+      name: AGE
+      type: date
+    schema:
+      openAPIV3Schema:
+        description: the Schema for the networkmetrics API
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: //git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: //git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: Spec defines the input arguments for debug operation
+            properties:
+              parameters:
+                type: object
+                properties:
+                  scriptParameters:
+                    description: Parameters to be passed to the Get-NetworkConfig script
+                    type: string
+              pod:
+                description: Pod is the target pod
+                type: string
+              node:
+                description: Node is the target node
+                type: string
+              user:
+                type: string
+            type: object
+            x-kubernetes-preserve-unknown-fields: true
+          status:
+            description: DebugOperationStatus defines the observed state of DebugOperation
+            properties:
+              errorMessage:
+                description: Error message of the operation
+                type: string
+              lastUpdateTime:
+                description: LastUpdateTime defines date and time when status changed
+                format: date-time
+                type: string
+              phase:
+                description: high-level indicator of this operation
+                type: string
+              result:
+                description: Result link of networkmetric
+                type: string
+              workerJob:
+                description: WorkerJob is the Job wrapping the HPC pod executing the
+                  operation
+                type: string
+              workerPod:
+                description: WorkerPod is the HPC pod executing the operation
+                type: string
+              workerLabel:
+                additionalProperties:
+                  type: string
+                description: WorkerLabel is the label to select HPC pod
+                type: object
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: dotnettools.diagnostics.office.com
+  labels:
+    version: ${BUILD_VERSION}
+spec:
+  group: diagnostics.office.com
+  names:
+    kind: Dotnettool
+    listKind: DotnettoolList
+    plural: dotnettools
+    singular: dotnettool
+  scope: Namespaced
+  versions:
+  - name: v1beta1
+    additionalPrinterColumns:
+    - jsonPath: .spec.pod
+      name: TARGET-POD
+      type: string
+    - jsonPath: .status.phase
+      name: STATUS
+      type: string
+    - jsonPath: .metadata.creationTimestamp
+      name: AGE
+      type: date
+    schema:
+      openAPIV3Schema:
+        description: Dotnettool is the Schema for the dotnettool API
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: //git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: //git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: DotnettoolSpec defines the desired state of Dotnettool
+            properties:
+              parameters:
+                type: object
+                properties:
+                  namedConfigs:
+                    description: Action parameter to specify the operation for Dotnet Monitor.
+                    items:
+                      type: string
+                    type: array
+                  processIdentifier:
+                    description: UID parameter to specify the unique ID (uID) for Dotnet Monitor.
+                    type: string
+                  volumeMountName:
+                    description: VolumeMountName is used for providing the name of the temporory volume mount that reconcilers can utilize for override default name.
+                    type: string
+              pod:
+                description: Pod is the target pod
+                type: string
+            type: object
+            x-kubernetes-preserve-unknown-fields: true
+          status:
+            description: DebugOperationStatus defines the observed state of DebugOperation
+            properties:
+              errorMessage:
+                description: Error message of the operation
+                type: string
+              lastUpdateTime:
+                description: LastUpdateTime defines date and time when status changed
+                format: date-time
+                type: string
+              phase:
+                description: high-level indicator of this operation
+                type: string
+              result:
+                description: Result link of dotnettool
+                type: string
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: wprs.diagnostics.office.com
+  labels:
+    version: ${BUILD_VERSION}
+spec:
+  group: diagnostics.office.com
+  names:
+    kind: Wpr
+    listKind: WprList
+    plural: wprs
+    singular: wpr
+  scope: Namespaced
+  versions:
+  - name: v1beta1
+    additionalPrinterColumns:
+    - jsonPath: .spec.pod
+      name: TARGET-POD
+      type: string
+    - jsonPath: .spec.node
+      name: TARGET-NODE
+      type: string
+    - jsonPath: .status.phase
+      name: STATUS
+      type: string
+    - jsonPath: .metadata.creationTimestamp
+      name: AGE
+      type: date
+    schema:
+      openAPIV3Schema:
+        description: the Schema for the wpr API
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: //git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: //git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: Spec defines the input arguments for debug operation
+            properties:
+              parameters:
+                type: object
+                properties:
+                  scriptParameters:
+                    description: Script parameters specifies the operation for WPR.
+                    type: string
+                  processIdentifier:
+                    description: UID parameter to specify the unique process ID (PID) for WPR.
+                    type: string
+              pod:
+                description: Pod is the target pod
+                type: string
+              node:
+                description: Node is the target node
+                type: string
+              user:
+                type: string
+            type: object
+            x-kubernetes-preserve-unknown-fields: true
+          status:
+            description: DebugOperationStatus defines the observed state of DebugOperation
+            properties:
+              errorMessage:
+                description: Error message of the operation
+                type: string
+              lastUpdateTime:
+                description: LastUpdateTime defines date and time when status changed
+                format: date-time
+                type: string
+              phase:
+                description: high-level indicator of this operation
+                type: string
+              result:
+                description: Result link of winlog
+                type: string
+              workerJob:
+                description: WorkerJob is the Job wrapping the HPC pod executing the
+                  operation
+                type: string
+              workerPod:
+                description: WorkerPod is the HPC pod executing the operation
+                type: string
+              workerLabel:
+                additionalProperties:
+                  type: string
+                description: WorkerLabel is the label to select HPC pod
+                type: object
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: gadgets.diagnostics.office.com
+  labels:
+    version: ${BUILD_VERSION} 
+spec:
+  group: diagnostics.office.com
+  names:
+    kind: Gadget
+    listKind: GadgetList
+    plural: gadgets
+    singular: gadget
+  scope: Namespaced
+  versions:
+  - name: v1beta1
+    additionalPrinterColumns:
+    - jsonPath: .spec.pod
+      name: TARGET-POD
+      type: string
+    - jsonPath: .spec.node
+      name: TARGET-NODE
+      type: string
+    - jsonPath: .spec.container
+      name: TARGET-CONTAINER
+      type: string
+    - jsonPath: .spec.podSelector
+      name: TARGET-PODSELECTOR
+      type: string
+    - jsonPath: .spec.operation
+      name: OPERATION
+      type: string    
+    - jsonPath: .spec.durationInSeconds
+      name: TIMEOUT
+      type: string    
+    - jsonPath: .status.phase
+      name: STATUS
+      type: string    
+    - jsonPath: .metadata.creationTimestamp
+      name: AGE
+      type: date
+    schema:
+      openAPIV3Schema:
+        description: the Schema for the gadgets API
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: //git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: //git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: Spec defines the input arguments for debug operation
+            properties:              
+              node:
+                description: Node is the target node
+                type: string
+              pod:
+                description: Pod is the target pod
+                type: string
+              container:
+                description: Container is the target container
+                type: string
+              podSelector:
+                description: Selector is the target pod selector, used to target pods belonging to a service
+                type: string
+              durationInSeconds:
+                description: Timeout for the operation, Maximum allowed is 5 minutes
+                type: integer
+                minimum: 60
+                maximum: 300
+              operation:
+                description: Operation is the IG Command to run - one of audit/advise/trace/profile along with gadget type/sub resource and he subcmmand if any 
+                  like bind/exec. Ex -'trace bind'/'trace exec'/'advise network-policy monitor'
+                type: string
+              parameters:
+                type: object
+                properties:                   
+                  arguments:
+                    description: Additional parameters if any to be supplied for any command, Example '-K' for cpu tracing to get only kernel traces, --latency for tcprtt
+                    type: string
+                  outputFormat:
+                    description: Output format - json/jsonpretty/yaml/column along with column filter for 'column' output type, Details here //www.inspektor-gadget.io/
+                    type: string                                 
+              user:
+                type: string
+            type: object
+          status:
+            description: Status defines the observed state of IG operation
+            properties:
+              errorMessage:
+                description: Error message of the operation
+                type: string
+              lastUpdateTime:
+                description: LastUpdateTime defines date and time when status changed
+                format: date-time
+                type: string
+              phase:
+                description: Phase of the operation - Succeeded/Failed/Running
+                type: string
+              result:
+                description: Result link for Inspektor Gadget comand output
+                type: string             
+              workerPod:
+                description: WorkerPod is the Reconciler pod executing the operation
+                type: string
+              workerJob:
+                description: WorkerJob is the Job wrapping the HPC pod executing the operation
+                type: string
+              workerLabel:
+                additionalProperties:
+                  type: string
+                description: WorkerLabel is the label to select Reconciler pod
+                type: object
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cosmic-debug-agent-deployment
+  namespace: cosmic-debug-agent
+  labels:
+    version: ${BUILD_VERSION}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cosmic-debug-agent
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        prometheus.io/port: '8080'
+        prometheus.io/scrape: 'true'
+      labels:
+        app: cosmic-debug-agent
+        ring: ${RING}
+        region: ${REGION}
+        location: ${LOCATION}
+        cluster: ${CLUSTER_ID}
+    spec:
+      containers:
+      - imagePullPolicy: Always
+        args:
+        - "-ring=${RING}"
+        - "-worker-image=${ACR_URL}/478ae0ce-50f8-44e7-99a6-cf4b9b40d97e/official/d2infraoss/debug-container:${WORKER_IMAGE_TAG}@sha256:${WORKER_IMAGE_SHA}"
+        command:
+        - "/debug-container-agent"
+        image: "${ACR_URL}/478ae0ce-50f8-44e7-99a6-cf4b9b40d97e/official/linux/debug-container-agent:${AGENT_IMAGE_TAG}@sha256:${AGENT_IMAGE_SHA}"
+        name: cosmic-debug-agent
+        env:
+          - name: MSI_OBJECT_ID
+            value: ${MSI_OBJECT_ID}
+          - name: MSI_CLIENT_ID
+            value: ${MSI_CLIENT_ID}
+          - name: SUBSCRIPTION_ID
+            value: ${MANAGEMENT_SUBSCRIPTION_ID}
+          - name: RING
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['ring']
+          - name: COSMIC_CLUSTER_ID
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['cluster']
+          - name: CPR_LINUX_IMAGE
+            value: "${ACR_URL}/efficiencypack:${CPR_LINUX_IMAGE_TAG}@sha256:${CPR_LINUX_IMAGE_SHA}"
+          - name: DOTNETTOOL_LINUX_IMAGE
+            value: "${ACR_URL}/${COSMIC_MODEL_D2_SERVICE_TREE_ID}/${DOTNETTOOL_LINUX_PATH}:${DOTNETTOOL_LINUX_IMAGE_TAG}@sha256:${DOTNETTOOL_LINUX_IMAGE_SHA}"
+          - name: GADGET_DAEMONSET_IMAGE
+            value: "${MCR_URL}${GADGET_DAEMONSET_IMAGE_PATH}:${GADGET_DAEMONSET_IMAGE_TAG}@sha256:${GADGET_DAEMONSET_IMAGE_SHA}"
+          - name: GADGET_WORKER_POD_IMAGE
+            value: "${ACR_URL}${GADGET_WORKER_POD_IMAGE_PATH}:${GADGET_WORKER_POD_IMAGE_TAG}@sha256:${GADGET_WORKER_POD_IMAGE_SHA}"
+          - name: LOG_LINUX_IMAGE
+            value: "${ACR_URL}/478ae0ce-50f8-44e7-99a6-cf4b9b40d97e/official/linux/debug-container-worker/logs:${LOGS_LINUX_IMAGE_TAG}@sha256:${LOGS_LINUX_IMAGE_SHA}"
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8081
+          initialDelaySeconds: 10
+          periodSeconds: 20
+        resources:
+          limits:
+            cpu: 300m
+            memory: 400M
+          requests:
+            cpu: 200m
+            memory: 300M
+      nodeSelector:
+        kubernetes.io/os: linux
+      serviceAccountName: cosmic-debug-agent
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: cosmic-debug-agent
+  labels:
+    version: ${BUILD_VERSION}
+rules:
+- apiGroups:
+  - diagnostics.office.com
+  resources: ['*']
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - aadpodidentity.k8s.io
+  resources: ['*']
+  verbs:
+  - create
+  - delete
+- apiGroups:
+  - ''
+  resources:
+  - events
+  verbs:
+  - create
+  - patch
+  - update
+- apiGroups:
+  - batch
+  resources:
+  - jobs
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - ''
+  resources:
+  - pods
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - ''
+  resources:
+  - nodes
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - rbac.authorization.k8s.io
+  resources:
+  - clusterroles
+  - clusterrolebindings
+  - rolebindings
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - pods/ephemeralcontainers
+  verbs:
+  - update
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: cosmic-debug-agent
+  labels:
+    version: ${BUILD_VERSION}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cosmic-debug-agent
+subjects:
+- kind: ServiceAccount
+  name: cosmic-debug-agent
+  namespace: cosmic-debug-agent
+---
+# Not merging this with ig-clusterrole as ig-clusterrole is given to ig-serviceaccount, which is a service account used for worker pod also 
+# These roles are not needed for worker pod at cluster level, debug controller while invoking assigns these to worker pod as gadget ns level
+# hence the name scoped
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: ig-scoped-clusterrole
+rules:
+- apiGroups:
+  - ''
+  resources:
+  - pods/portforward
+  verbs:
+  - create
+  - patch
+  - delete
+- apiGroups:
+  - ''
+  resources:
+  - pods/exec
+  verbs:
+  - create
+- apiGroups:
+  - apps
+  resources:
+  - daemonsets
+  verbs:
+  - list
+  - watch
+  - get
+- apiGroups:
+  - apps
+  resources:
+  - daemonsets
+  resourceNames:
+  - gadget
+  verbs:
+  - create
+  - patch
+- apiGroups:
+  - ''
+  resources:
+  - serviceaccounts
+  resourceNames:
+  - gadget
+  verbs:
+  - create
+  - patch
+- apiGroups:
+  - rbac.authorization.k8s.io
+  resources:
+  - roles
+  verbs:
+  - create
+  - patch
+  - delete
+- apiGroups:
+  - rbac.authorization.k8s.io
+  resources:
+  - rolebindings
+  verbs:
+  - create
+  - patch
+  - delete
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: ig-clusterrole
+  labels:
+    version: ${BUILD_VERSION}
+rules:
+- apiGroups:
+  - ''
+  resources:
+  - namespaces
+  - nodes
+  - pods
+  verbs:
+  - get
+  - watch
+  - list
+- apiGroups:
+  - ''
+  resources:
+  - services
+  verbs:
+  - list
+- apiGroups:
+  - "gadget.kinvolk.io"
+  resources:
+  - traces
+  - traces/status
+  verbs:
+  - delete
+  - deletecollection
+  - get
+  - list
+  - patch
+  - create
+  - update
+  - watch
+- apiGroups:
+  - "*"
+  resources:
+  - deployments
+  - replicasets
+  - statefulsets
+  - daemonsets
+  - jobs
+  - cronjobs
+  - replicationcontrollers
+  verbs:
+  - get
+- apiGroups:
+  - apps
+  resources:
+  - daemonsets
+  verbs:
+  - list
+- apiGroups:
+  - security-profiles-operator.x-k8s.io
+  resources:
+  - seccompprofiles
+  verbs:
+  - create
+  - list
+  - watch
+- apiGroups:
+  - security.openshift.io
+  resources:
+  - securitycontextconstraints
+  verbs:
+  - use
+- apiGroups:
+  - apiextensions.k8s.io
+  resources:
+  - customresourcedefinitions
+  verbs:
+  - create
+- apiGroups:
+  - apiextensions.k8s.io
+  resources:
+  - customresourcedefinitions
+  resourceNames:
+  - traces.gadget.kinvolk.io
+  verbs:
+  - delete
+  - patch
+- apiGroups:
+  - rbac.authorization.k8s.io
+  resources:
+  - clusterroles
+  verbs:
+  - create
+- apiGroups:
+  - rbac.authorization.k8s.io
+  resources:
+  - clusterroles
+  resourceNames:
+  - gadget-cluster-role
+  verbs:
+  - patch
+  - delete
+- apiGroups:
+  - rbac.authorization.k8s.io
+  resources:
+  - clusterrolebindings
+  verbs:
+  - create
+- apiGroups:
+  - rbac.authorization.k8s.io
+  resources:
+  - clusterrolebindings
+  resourceNames:
+  - gadget-cluster-role-binding
+  verbs:
+  - patch
+  - delete
+- apiGroups:
+  - ''
+  resources:
+  - namespaces
+  verbs:
+  - create
+- apiGroups:
+  - ''
+  resources:
+  - namespaces
+  resourceNames:
+  - gadget
+  verbs:
+  - patch
+  - delete
+- apiGroups:
+  - ''
+  resources: 
+  - secrets
+  verbs: 
+  - get
+  # IG deployment currently needs this as a mandatory permission while getting deployment. ToDo : Check with IG team if this can be removed
+- apiGroups: 
+  - security.openshift.io
+  resources: 
+  - securitycontextconstraints
+  resourceNames:
+  - privileged
+  verbs:
+  - use
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: ig-cluster-role-binding
+  labels:
+    version: ${BUILD_VERSION}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: ig-clusterrole
+subjects:
+- kind: ServiceAccount
+  name: ig-serviceaccount
+  namespace: cosmic-debug-gadget
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: cosmic-debug-agent-ig-clusterrole-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: ig-clusterrole
+subjects:
+- kind: ServiceAccount
+  name: cosmic-debug-agent
+  namespace: cosmic-debug-agent
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: cosmic-debug-agent-ig-scoped-clusterrole-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: ig-scoped-clusterrole
+subjects:
+- kind: ServiceAccount
+  name: cosmic-debug-agent
+  namespace: cosmic-debug-agent
+---
+apiVersion: aadpodidentity.k8s.io/v1
+kind: AzureIdentity
+metadata:
+  annotations:
+    aadpodidentity.k8s.io/Behavior: namespaced
+  name: cosmic-debug-agent-id-winlog
+  namespace: cosmic-debug-winlog
+spec:
+  clientID: __COSMIC_MANAGEMENTPLANE_MSI_CLIENT_ID__
+  resourceID: "/subscriptions/${MANAGEMENT_SUBSCRIPTION_ID}/resourceGroups/cosmic-debug-agent-${RING}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/cosmic-debug-agent-id-${RING}"
+  type: 0
+---
+apiVersion: aadpodidentity.k8s.io/v1
+kind: AzureIdentityBinding
+metadata:
+  name: cosmic-debug-agent-id-binding-winlog
+  namespace: cosmic-debug-winlog
+spec:
+  azureIdentity: cosmic-debug-agent-id-winlog
+  selector: cosmic-debug-agent-id-binding-winlog-selector
+---
+apiVersion: aadpodidentity.k8s.io/v1
+kind: AzureIdentity
+metadata:
+  annotations:
+    aadpodidentity.k8s.io/Behavior: namespaced
+  name: cosmic-debug-agent-id-gadget
+  namespace: cosmic-debug-gadget
+spec:
+  clientID: __COSMIC_MANAGEMENTPLANE_MSI_CLIENT_ID__
+  resourceID: "/subscriptions/${MANAGEMENT_SUBSCRIPTION_ID}/resourceGroups/cosmic-debug-agent-${RING}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/cosmic-debug-agent-id-${RING}"
+  type: 0
+---
+apiVersion: aadpodidentity.k8s.io/v1
+kind: AzureIdentityBinding
+metadata:
+  name: cosmic-debug-agent-id-binding-gadget
+  namespace: cosmic-debug-gadget
+spec:
+  azureIdentity: cosmic-debug-agent-id-gadget
+  selector: cosmic-debug-agent-id-binding-gadget-selector
