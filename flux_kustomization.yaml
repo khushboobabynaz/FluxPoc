@@ -1,0 +1,66 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: cosmic-debug-agent
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: cosmic-debug-win
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: cosmic-debug-linux
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: cosmic-debug-cpr
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: cosmic-debug-podsniff
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    toolkit.fluxcd.io/tenant: agent-deployment-stg
+  name: staging
+---  
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    toolkit.fluxcd.io/tenant: agent-deployment-stg
+  name: flux-applier
+  namespace: staging
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: GitRepository
+metadata:
+  name: flux
+  namespace: staging
+spec:
+  interval: 1m
+  url: https://github.com/khushboobabynaz/Flux
+  ref:
+    branch: main
+
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: agent-deployment-stg
+  namespace: staging
+spec:
+  interval: 1m
+  path: "./"
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux
+  targetNamespace: staging
