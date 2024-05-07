@@ -7,6 +7,11 @@ metadata:
 apiVersion: v1
 kind: Namespace
 metadata:
+  name: cosmic-test
+---
+apiVersion: v1
+kind: Namespace
+metadata:
   name: cosmic-debug-agent
 # Deployment definition
 ---
