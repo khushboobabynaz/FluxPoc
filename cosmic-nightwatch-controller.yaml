@@ -13,8 +13,6 @@ metadata:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  labels:
-    version: {{BUILD_VERSION}}
   name: elect-nightwatch-controller-leader
   namespace: cosmic-nightwatch-controller
 roleRef:
@@ -29,8 +27,6 @@ subjects:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  labels:
-    version: {{BUILD_VERSION}}
   name: nightwatch-controller-viewer
 rules:
 - apiGroups:
@@ -72,8 +68,6 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  labels:
-    version: {{BUILD_VERSION}}
   name: nightwatch-controller-contributor
 rules:
 - apiGroups:
