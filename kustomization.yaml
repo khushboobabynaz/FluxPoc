@@ -4,4 +4,6 @@ resources:
 - cosmic-debug-win.yaml
 - cosmic-debug-linux.yaml
 - cosmic-debug-agent.yaml
+- cosmic-nightwatch-controller.yaml
+- cosmic-mgmtplane-nightwatch.yml
 - keda.yaml
